@@ -42,7 +42,7 @@ function main() {
       + '-is_remote_https true/false\t' + 'Talk to real proxy/PAC server with HTTPS. Default: false\n'
       + '-ignore_https_cert true/false\t' + 'ignore error when verify certificate of real proxy/PAC server. Default: false\n'
       + '-are_remotes_in_pac_https true/false\t' + 'Talk to proxy servers defined in PAC with HTTPS. Default: false\n'
-      + '-marsproxies_random_session true/false\t' + 'Use a random session when connecting to a MarsProxies server. Default: false\n'
+      + '-marsproxies_random_session true/false\t' + 'Use a random session ID when connecting to a MarsProxies server. Default: false\n'
     );
   if (cfg.as_pac_server && (cfg.local_host === '*' || cfg.local_host === '0.0.0.0' || cfg.local_host === '::')) {
     return console.error('when use as a PAC server, the local_host parameter must be a definite address');
