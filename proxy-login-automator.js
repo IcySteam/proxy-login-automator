@@ -145,9 +145,9 @@ function createPortForwarder(local_host, local_port, remote_host, remote_port, u
                 pwd = pwd + random_session_id;
               }
             }
-			// console.log('pwd: ' + pwd);
+            // console.log('pwd: ' + pwd);
 
-			let buf_proxy_basic_auth = Buffer.from('Proxy-Authorization: Basic ' + Buffer.from(usr + ':' + pwd).toString('base64'));
+            let buf_proxy_basic_auth = Buffer.from('Proxy-Authorization: Basic ' + Buffer.from(usr + ':' + pwd).toString('base64'));
 
             buf_ary.push(buf_proxy_basic_auth);
             buf_ary.push(state === STATE_FOUND_LF_CR ? BUF_CR_LF_CR_LF : BUF_LF_LF);
