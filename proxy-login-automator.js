@@ -5,11 +5,21 @@ var HTTPParser = process.binding('http_parser').HTTPParser;
 var http = require('http'), https = require('https');
 var url = require('url');
 
+function generateRandomString(length) {
+  const charset = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    const randomIndex = Math.floor(Math.random() * charset.length);
+    result += charset[randomIndex];
+  }
+  return result;
+}
+
 function main() {
   //convert `-key value` to cfg[key]=value
   var cfg = process.argv.slice(2/*skip ["node", "xxx.js"]*/).reduce(function (cfg, arg, i, argv) {
     return (i % 2 === 0 && (arg.slice(0, 1) === '-' && (cfg[arg.slice(1)] = argv[i + 1])), cfg);
-  }, {local_host: '', local_port: 0, remote_host: '', remote_port: 0, usr: '', pwd: '', as_pac_server: 0});
+  }, {local_host: '', local_port: 0, remote_host: '', remote_port: 0, usr: '', pwd: '', as_pac_server: 0, marsproxies_random_session: 0});
   cfg.local_host = cfg.local_host || 'localhost';
   cfg.local_port = (cfg.local_port & 0xffff) || 8080;
   cfg.remote_port = (cfg.remote_port & 0xffff) || 8080;
@@ -17,6 +27,7 @@ function main() {
   cfg.is_remote_https = cfg.is_remote_https === 'true';
   cfg.ignore_https_cert = cfg.ignore_https_cert === 'true';
   cfg.are_remotes_in_pac_https = cfg.are_remotes_in_pac_https === 'true';
+  cfg.marsproxies_random_session = cfg.marsproxies_random_session === 'true';
 
   if (!cfg.local_host || !cfg.local_port || !cfg.remote_host || !cfg.remote_port || !cfg.usr || !cfg.pwd)
     return console.error('Usage of parameters:\n'
@@ -31,17 +42,17 @@ function main() {
       + '-is_remote_https true/false\t' + 'Talk to real proxy/PAC server with HTTPS. Default: false\n'
       + '-ignore_https_cert true/false\t' + 'ignore error when verify certificate of real proxy/PAC server. Default: false\n'
       + '-are_remotes_in_pac_https true/false\t' + 'Talk to proxy servers defined in PAC with HTTPS. Default: false\n'
+	  + '-marsproxies_random_session true/false\t' + 'Use a random session when connecting to a MarsProxies server. Default: false\n'
     );
   if (cfg.as_pac_server && (cfg.local_host === '*' || cfg.local_host === '0.0.0.0' || cfg.local_host === '::')) {
     return console.error('when use as a PAC server, the local_host parameter must be a definite address');
   }
   console.log('Using parameters: ' + JSON.stringify(cfg, null, '  '));
-  cfg.buf_proxy_basic_auth = Buffer.from('Proxy-Authorization: Basic ' + Buffer.from(cfg.usr + ':' + cfg.pwd).toString('base64'));
 
   if (cfg.as_pac_server) {
-    createPacServer(cfg.local_host, cfg.local_port, cfg.remote_host, cfg.remote_port, cfg.buf_proxy_basic_auth, cfg.is_remote_https, cfg.ignore_https_cert, cfg.are_remotes_in_pac_https);
+    createPacServer(cfg.local_host, cfg.local_port, cfg.remote_host, cfg.remote_port, cfg.usr, cfg.pwd, cfg.is_remote_https, cfg.ignore_https_cert, cfg.are_remotes_in_pac_https, cfg.marsproxies_random_session);
   } else {
-    createPortForwarder(cfg.local_host, cfg.local_port, cfg.remote_host, cfg.remote_port, cfg.buf_proxy_basic_auth, cfg.is_remote_https, cfg.ignore_https_cert);
+    createPortForwarder(cfg.local_host, cfg.local_port, cfg.remote_host, cfg.remote_port, cfg.usr, cfg.pwd, cfg.is_remote_https, cfg.ignore_https_cert, cfg.marsproxies_random_session);
   }
 }
 
@@ -49,7 +60,7 @@ var CR = 0xd, LF = 0xa, BUF_CR = Buffer.from([0xd]), BUF_CR_LF_CR_LF = Buffer.fr
   BUF_LF_LF = Buffer.from([0xa, 0xa]), BUF_PROXY_CONNECTION_CLOSE = Buffer.from('Proxy-Connection: close');
 var STATE_NONE = 0, STATE_FOUND_LF = 1, STATE_FOUND_LF_CR = 2;
 
-function createPortForwarder(local_host, local_port, remote_host, remote_port, buf_proxy_basic_auth, is_remote_https, ignore_https_cert) {
+function createPortForwarder(local_host, local_port, remote_host, remote_port, usr, pwd, is_remote_https, ignore_https_cert, marsproxies_random_session) {
   net.createServer({allowHalfOpen: true}, function (socket) {
     var realCon = (is_remote_https ? tls : net).connect({
       port: remote_port, host: remote_host, allowHalfOpen: true,
@@ -123,6 +134,21 @@ function createPortForwarder(local_host, local_port, remote_host, remote_port, b
           if (parser.__is_headers_complete) {
             buf_ary.push(buf.slice(unsavedStart, buf[i - 1] === CR ? i - 1 : i));
             //console.log('insert auth header');
+			
+			//give pwd a random session ID every time the socket receives data if marsproxies_random_session is true
+			//when a browser profile first connects to a MarsProxies server, a session with the supplied ID will be established (if a session ID is not supplied, a default one will be used). all subsequent connections within the same browser profile will reuse the same session ID until the session lifetime expires
+			if (marsproxies_random_session) {
+			  let random_session_id = '_session-' + generateRandomString(8);
+			  if (/^.*_session-([a-z0-9]{8,8}).*$/.test(pwd)) {
+				  pwd = pwd.replace(/_session-([a-z0-9]{8,8})/, random_session_id);
+			  } else {
+				  pwd = pwd + random_session_id;
+			  }
+			}
+			// console.log('pwd: ' + pwd);
+				
+			let buf_proxy_basic_auth = Buffer.from('Proxy-Authorization: Basic ' + Buffer.from(usr + ':' + pwd).toString('base64'));
+			
             buf_ary.push(buf_proxy_basic_auth);
             buf_ary.push(state === STATE_FOUND_LF_CR ? BUF_CR_LF_CR_LF : BUF_LF_LF);
 
@@ -184,10 +210,11 @@ function createPortForwarder(local_host, local_port, remote_host, remote_port, b
 
 var proxyAddrMap = {};
 
-function createPacServer(local_host, local_port, remote_host, remote_port, buf_proxy_basic_auth, is_remote_https, ignore_https_cert, are_remotes_in_pac_https) {
+function createPacServer(local_host, local_port, remote_host, remote_port, usr, pwd, is_remote_https, ignore_https_cert, are_remotes_in_pac_https, marsproxies_random_session) {
   http.createServer(function (req, res) {
 
     var internal_req = url.parse(req.url);
+	let buf_proxy_basic_auth = Buffer.from('Proxy-Authorization: Basic ' + Buffer.from(usr + ':' + pwd).toString('base64'));
 
     internal_req.host = remote_host;
     internal_req.port = remote_port;
