@@ -42,7 +42,7 @@ function main() {
       + '-is_remote_https true/false\t' + 'Talk to real proxy/PAC server with HTTPS. Default: false\n'
       + '-ignore_https_cert true/false\t' + 'ignore error when verify certificate of real proxy/PAC server. Default: false\n'
       + '-are_remotes_in_pac_https true/false\t' + 'Talk to proxy servers defined in PAC with HTTPS. Default: false\n'
-	  + '-marsproxies_random_session true/false\t' + 'Use a random session when connecting to a MarsProxies server. Default: false\n'
+      + '-marsproxies_random_session true/false\t' + 'Use a random session when connecting to a MarsProxies server. Default: false\n'
     );
   if (cfg.as_pac_server && (cfg.local_host === '*' || cfg.local_host === '0.0.0.0' || cfg.local_host === '::')) {
     return console.error('when use as a PAC server, the local_host parameter must be a definite address');
@@ -134,21 +134,21 @@ function createPortForwarder(local_host, local_port, remote_host, remote_port, u
           if (parser.__is_headers_complete) {
             buf_ary.push(buf.slice(unsavedStart, buf[i - 1] === CR ? i - 1 : i));
             //console.log('insert auth header');
-			
-			//give pwd a random session ID every time the socket receives data if marsproxies_random_session is true
-			//when a browser profile first connects to a MarsProxies server, a session with the supplied ID will be established (if a session ID is not supplied, a default one will be used). all subsequent connections within the same browser profile will reuse the same session ID until the session lifetime expires
-			if (marsproxies_random_session) {
-			  let random_session_id = '_session-' + generateRandomString(8);
-			  if (/^.*_session-([a-z0-9]{8,8}).*$/.test(pwd)) {
-				  pwd = pwd.replace(/_session-([a-z0-9]{8,8})/, random_session_id);
-			  } else {
-				  pwd = pwd + random_session_id;
-			  }
-			}
+
+            //give pwd a random session ID every time the socket receives data if marsproxies_random_session is true
+            //when a browser profile first connects to a MarsProxies server, a session with the supplied ID will be established (if a session ID is not supplied, a default one will be used). all subsequent connections within the same browser profile will reuse the same session ID until the session lifetime expires
+            if (marsproxies_random_session) {
+              let random_session_id = '_session-' + generateRandomString(8);
+              if (/^.*_session-([a-z0-9]{8,8}).*$/.test(pwd)) {
+                pwd = pwd.replace(/_session-([a-z0-9]{8,8})/, random_session_id);
+              } else {
+                pwd = pwd + random_session_id;
+              }
+            }
 			// console.log('pwd: ' + pwd);
-				
+
 			let buf_proxy_basic_auth = Buffer.from('Proxy-Authorization: Basic ' + Buffer.from(usr + ':' + pwd).toString('base64'));
-			
+
             buf_ary.push(buf_proxy_basic_auth);
             buf_ary.push(state === STATE_FOUND_LF_CR ? BUF_CR_LF_CR_LF : BUF_LF_LF);
 
@@ -214,7 +214,7 @@ function createPacServer(local_host, local_port, remote_host, remote_port, usr, 
   http.createServer(function (req, res) {
 
     var internal_req = url.parse(req.url);
-	let buf_proxy_basic_auth = Buffer.from('Proxy-Authorization: Basic ' + Buffer.from(usr + ':' + pwd).toString('base64'));
+    let buf_proxy_basic_auth = Buffer.from('Proxy-Authorization: Basic ' + Buffer.from(usr + ':' + pwd).toString('base64'));
 
     internal_req.host = remote_host;
     internal_req.port = remote_port;
