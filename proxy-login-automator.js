@@ -139,7 +139,7 @@ function createPortForwarder(local_host, local_port, remote_host, remote_port, u
             //when a browser profile first connects to a MarsProxies server, a session with the supplied ID will be established (if a session ID is not supplied, a default one will be used). all subsequent connections within the same browser profile will reuse the same session ID until the proxy connection is closed
             if (marsproxies_random_session) {
               let random_session_id = '_session-' + generateRandomString(8);
-              if (/^.*_session-([a-z0-9]{8,8}).*$/.test(pwd)) {
+              if (/_session-([a-z0-9]{8,8})/.test(pwd)) {
                 pwd = pwd.replace(/_session-([a-z0-9]{8,8})/, random_session_id);
               } else {
                 pwd = pwd + random_session_id;
