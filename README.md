@@ -1,5 +1,5 @@
 # About this fork: [IcySteam/proxy-login-automator](https://github.com/IcySteam/proxy-login-automator)
-Enables using a random session ID when connecting to a MarsProxies server.
+This repository is a fork of [sjitech/proxy-login-automator](https://github.com/sjitech/proxy-login-automator) to enable the use of a random session ID when connecting to a MarsProxies server.
 ```
 -marsproxies_random_session true
 ```
