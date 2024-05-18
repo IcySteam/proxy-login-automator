@@ -214,12 +214,12 @@ function createPacServer(local_host, local_port, remote_host, remote_port, usr, 
   http.createServer(function (req, res) {
 
     var internal_req = url.parse(req.url);
-    let buf_proxy_basic_auth = Buffer.from('Proxy-Authorization: Basic ' + Buffer.from(usr + ':' + pwd).toString('base64'));
 
     internal_req.host = remote_host;
     internal_req.port = remote_port;
     req.headers['host'] = remote_host + ':' + remote_port;
     if (!req.headers['authorization']) {
+      let buf_proxy_basic_auth = Buffer.from('Proxy-Authorization: Basic ' + Buffer.from(usr + ':' + pwd).toString('base64'));
       req.headers['authorization'] = buf_proxy_basic_auth.slice('Proxy-Authorization: '.length).toString();
     }
     internal_req.headers = req.headers;
@@ -246,7 +246,7 @@ function createPacServer(local_host, local_port, remote_host, remote_port, usr, 
           if (!_local_port) {
             _local_port = local_port + Object.keys(proxyAddrMap).length + 1;
             proxyAddrMap[remoteAddr] = _local_port;
-            createPortForwarder(local_host, _local_port, host, Number(port), buf_proxy_basic_auth, are_remotes_in_pac_https, ignore_https_cert);
+            createPortForwarder(local_host, _local_port, host, Number(port), usr, pwd, are_remotes_in_pac_https, ignore_https_cert, marsproxies_random_session);
           }
           return 'PROXY ' + local_host + ':' + _local_port;
         });
