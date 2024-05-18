@@ -136,7 +136,10 @@ function createPortForwarder(local_host, local_port, remote_host, remote_port, u
             //console.log('insert auth header');
 
             //give pwd a random session ID every time the socket receives data if marsproxies_random_session is true
-            //when a browser profile first connects to a MarsProxies server, a session with the supplied ID will be established (if a session ID is not supplied, a default one will be used). all subsequent connections within the same browser profile will reuse the same session ID until the proxy connection is closed
+            //
+            //when a browser profile first connects to a MarsProxies server, a proxy connection with the supplied session ID will be established (if a session ID is not supplied, a default one will be used)
+            //to MarsProxies, reusing the proxy connection will give you the same session/IP address even if you supply a different session ID when sending data
+            //to get a new session/IP address, simply re-establish the proxy connection with a different session ID
             if (marsproxies_random_session) {
               let random_session_id = '_session-' + generateRandomString(8);
               if (/_session-([a-z0-9]{8,8})/.test(pwd)) {
@@ -145,14 +148,14 @@ function createPortForwarder(local_host, local_port, remote_host, remote_port, u
                 pwd = pwd + random_session_id;
               }
             }
-            // console.log('pwd: ' + pwd);
+            //console.log('pwd: ' + pwd);
 
             let buf_proxy_basic_auth = Buffer.from('Proxy-Authorization: Basic ' + Buffer.from(usr + ':' + pwd).toString('base64'));
 
             buf_ary.push(buf_proxy_basic_auth);
             buf_ary.push(state === STATE_FOUND_LF_CR ? BUF_CR_LF_CR_LF : BUF_LF_LF);
 
-            // stop intercepting packets if encountered TLS and WebSocket handshake
+            //stop intercepting packets if encountered TLS and WebSocket handshake
             if (parser.__method === 5 /*CONNECT*/ || parser.__upgrade) {
               parser.close();
               parser = null;
