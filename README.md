@@ -1,10 +1,12 @@
 # About this fork: [IcySteam/proxy-login-automator](https://github.com/IcySteam/proxy-login-automator)
-This repository is a fork of [sjitech/proxy-login-automator](https://github.com/sjitech/proxy-login-automator) to enable the use of a random session ID when connecting to a MarsProxies server.
+This repository is a fork of [sjitech/proxy-login-automator](https://github.com/sjitech/proxy-login-automator)
+to enable the use of a random session ID when connecting to a MarsProxies server.
 ```
 -marsproxies_random_session true
 ```
 
-Since the original project is outdated, you'll need to use an older Node.js version, e.g. [v6.17.1](https://github.com/sjitech/proxy-login-automator/issues/35#issuecomment-1878401805).
+Since the original project is outdated, you'll need to use an older Node.js version,
+e.g. [v6.17.1](https://github.com/sjitech/proxy-login-automator/issues/35#issuecomment-1878401805).
 
 # proxy-login-automator
 A single node.js script to automatically inject user/password to http proxy server via a local forwarder
