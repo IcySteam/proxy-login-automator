@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 'use strict';
+
+const MARSPROXIES_SESSION_REGEX = /_session-([a-z0-9]{8,8})/
+
 var net = require('net'), tls = require('tls');
 var HTTPParser = process.binding('http_parser').HTTPParser;
 var http = require('http'), https = require('https');
@@ -141,22 +144,21 @@ function createPortForwarder(local_host, local_port, remote_host, remote_port, u
             //to MarsProxies, reusing the proxy connection will give you the same session/IP address even if you supply a different session ID when sending data
             //to get a new session/IP address, simply re-establish the proxy connection with a different session ID
             if (marsproxies_random_session) {
-              let session_regex = /_session-([a-z0-9]{8,8})/
-              let random_session_id = '_session-' + generateRandomString(8);
-              if (session_regex.test(pwd)) {
-                pwd = pwd.replace(session_regex, random_session_id);
+              const random_session_id = '_session-' + generateRandomString(8);
+              if (MARSPROXIES_SESSION_REGEX.test(pwd)) {
+                pwd = pwd.replace(MARSPROXIES_SESSION_REGEX, random_session_id);
               } else {
                 pwd = pwd + random_session_id;
               }
             }
             //console.log('pwd: ' + pwd);
 
-            let buf_proxy_basic_auth = Buffer.from('Proxy-Authorization: Basic ' + Buffer.from(usr + ':' + pwd).toString('base64'));
+            const buf_proxy_basic_auth = Buffer.from('Proxy-Authorization: Basic ' + Buffer.from(usr + ':' + pwd).toString('base64'));
 
             buf_ary.push(buf_proxy_basic_auth);
             buf_ary.push(state === STATE_FOUND_LF_CR ? BUF_CR_LF_CR_LF : BUF_LF_LF);
 
-            //stop intercepting packets if encountered TLS and WebSocket handshake
+            // stop intercepting packets if encountered TLS and WebSocket handshake
             if (parser.__method === 5 /*CONNECT*/ || parser.__upgrade) {
               parser.close();
               parser = null;
@@ -223,7 +225,7 @@ function createPacServer(local_host, local_port, remote_host, remote_port, usr, 
     internal_req.port = remote_port;
     req.headers['host'] = remote_host + ':' + remote_port;
     if (!req.headers['authorization']) {
-      let buf_proxy_basic_auth = Buffer.from('Proxy-Authorization: Basic ' + Buffer.from(usr + ':' + pwd).toString('base64'));
+      const buf_proxy_basic_auth = Buffer.from('Proxy-Authorization: Basic ' + Buffer.from(usr + ':' + pwd).toString('base64'));
       req.headers['authorization'] = buf_proxy_basic_auth.slice('Proxy-Authorization: '.length).toString();
     }
     internal_req.headers = req.headers;
