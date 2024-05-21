@@ -2,11 +2,11 @@
 setlocal enabledelayedexpansion
 
 set "STARTING_PORT=8080"
-set "NUM_PROXIES=16"
+set "NUM_PROXIES=1"
 
-set /a "ending_port=STARTING_PORT+NUM_PROXIES-1"
+set /a "ENDING_PORT=STARTING_PORT+NUM_PROXIES-1"
 
-for /l %%i in (%STARTING_PORT%,1,%ending_port%) do (
+for /l %%i in (%STARTING_PORT%,1,%ENDING_PORT%) do (
 	start cmd /k node proxy-login-automator.js ^
 		-local_host * ^
 		-local_port %%i ^
