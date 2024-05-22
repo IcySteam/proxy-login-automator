@@ -112,7 +112,7 @@ function createPortForwarder(local_host, local_port, remote_host, remote_port, u
         realCon.write(buf);
         return
       }
-      //console.log('[' + remote_host + ':' + remote_port + ']>>>>' + (Date.t = new Date()) + '.' + Date.t.getMilliseconds() + '\n' + buf.toString('ascii'));
+      console.log('[' + remote_host + ':' + remote_port + ']>>>>' + (Date.t = new Date()) + '.' + Date.t.getMilliseconds() + '\n' + buf.toString('ascii'));
       //var ret = parser.execute(buf);
       //console.log('\n\n----parser result: ' + ret + ' buf len:' + buf.length);
       //realCon.write(buf);
@@ -140,8 +140,8 @@ function createPortForwarder(local_host, local_port, remote_host, remote_port, u
 
             //give pwd a random session ID every time the socket receives data if marsproxies_random_session is true
             //
-            //when a browser profile first connects to a MarsProxies server, a proxy connection with the supplied session ID will be established (if a session ID is not supplied, a default one will be used)
-            //to MarsProxies, reusing the proxy connection will give you the same session/IP address even if you supply a different session ID when sending data
+            //when a browser profile first connects to a server via a MarsProxies proxy, a proxy connection to the server with the supplied session ID will be established (if a session ID is not supplied, a default one will be used)
+            //reusing the proxy connection / HTTP Keep-Alive will give you the same MarsProxies session/IP address even if you supply a different session ID when connecting again to the same server
             //to get a new session/IP address, simply re-establish the proxy connection with a different session ID
             if (marsproxies_random_session) {
               const random_session_id = '_session-' + generateRandomString(8);
