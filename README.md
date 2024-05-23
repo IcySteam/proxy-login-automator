@@ -5,7 +5,7 @@ to enable the use of a random session ID when connecting to a MarsProxies server
 -marsproxies_random_session true
 ```
 
-Since the original project is outdated, you'll need to use an older Node.js version,
+Note: since the original project is outdated, you'll need to use an older Node.js version,
 e.g. [v6.17.1](https://github.com/sjitech/proxy-login-automator/issues/35#issuecomment-1878401805).
 
 # proxy-login-automator
