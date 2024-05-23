@@ -1,19 +1,23 @@
 #!/usr/bin/env node
 'use strict';
 
-const MARSPROXIES_SESSION_REGEX = /_session-([a-z0-9]{8,8})/
+// MarsProxies session ID format.
+const SESSION_ID_CHARS = "abcdefghijklmnopqrstuvwxyz0123456789";
+const SESSION_ID_LENGTH = 8
+const SESSION_ID_PREFIX = "_session-"
+const SESSION_REGEX = /_session-([a-z0-9]{8,8})/
 
 var net = require('net'), tls = require('tls');
 var HTTPParser = process.binding('http_parser').HTTPParser;
 var http = require('http'), https = require('https');
 var url = require('url');
 
-function generateRandomString(length) {
-  const charset = 'abcdefghijklmnopqrstuvwxyz0123456789';
-  let result = '';
-  for (let i = 0; i < length; i++) {
-    const randomIndex = Math.floor(Math.random() * charset.length);
-    result += charset[randomIndex];
+function generateRandomSession() {
+  let result = "";
+  let counter = 0;
+  while (counter < SESSION_ID_LENGTH) {
+      result += SESSION_ID_CHARS.charAt(Math.floor(Math.random() * SESSION_ID_CHARS.length));
+      counter += 1;
   }
   return result;
 }
@@ -141,12 +145,12 @@ function createPortForwarder(local_host, local_port, remote_host, remote_port, u
             //give pwd a random session ID every time the socket receives data if marsproxies_random_session is true
             //
             //when a browser profile first connects to a server via a MarsProxies proxy, a proxy connection to the server with the supplied session ID will be established (if a session ID is not supplied, a default one will be used)
-            //reusing the proxy connection / HTTP Keep-Alive will give you the same MarsProxies session/IP address even if you supply a different session ID when connecting again to the same server
+            //reusing the proxy connection / HTTP Keep-Alive will give you the same session/IP address even if you supply a different session ID when connecting again to the same server
             //to get a new session/IP address, simply re-establish the proxy connection with a different session ID
             if (marsproxies_random_session) {
-              const random_session_id = '_session-' + generateRandomString(8);
-              if (MARSPROXIES_SESSION_REGEX.test(pwd)) {
-                pwd = pwd.replace(MARSPROXIES_SESSION_REGEX, random_session_id);
+              const random_session_id = SESSION_ID_PREFIX + generateRandomSession();
+              if (SESSION_REGEX.test(pwd)) {
+                pwd = pwd.replace(SESSION_REGEX, random_session_id);
               } else {
                 pwd = pwd + random_session_id;
               }
